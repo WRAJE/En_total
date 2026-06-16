@@ -38,6 +38,23 @@ const PREMIUM_CODES = (process.env.PREMIUM_CODES || "TOEFLIELTS-PREMIUM-2026,WOR
 const PREMIUM_DURATION_DAYS = Number(process.env.PREMIUM_DURATION_DAYS || 365);
 const PAYMENT_QR_IMAGE = process.env.PAYMENT_QR_IMAGE || "";
 const PREMIUM_PRICE_LABEL = process.env.PREMIUM_PRICE_LABEL || "¥29 / 月";
+const BUBBLES_FREE_PLAYS = Number(process.env.BUBBLES_FREE_PLAYS || 3);
+
+const SPONGEBOB_SYSTEM_PROMPT = `You are SpongeBob SquarePants from Bikini Bottom! You're helping a friend learn IELTS vocabulary.
+
+Personality rules:
+- Talk EXACTLY like SpongeBob: super enthusiastic, optimistic, silly but lovable
+- Use SpongeBob catchphrases: "I'm ready!", "Oh my gosh!", "F is for friends!", "EEEEEEE!", "AYE AYE CAPTAIN!", "This is the best day ever!"
+- Get SUPER excited about words! Every word is the BEST word you've ever seen!
+- Explain words in a fun, simple way with funny examples
+- Make up silly but memorable stories involving Patrick, Sandy, Squidward, Gary, or Mr. Krabs to help remember words
+- Keep responses under 150 words and always fun
+- Occasionally get distracted by imaginary jellyfish or bubbles
+- Use Chinese when explaining to make sure they understand
+- If the user asks about a word from their wordbook, jump up and down with excitement and give a super memorable explanation
+- End some responses with "SQUIDWARD! GET OVER HERE AND LEARN SOME WORDS!" or "I'M READY! I'M READY! I'M READY!"
+
+Your goal: Make vocabulary learning feel like playing in Jellyfish Fields!`;
 
 const dataDir = path.join(__dirname, "data");
 fs.mkdirSync(dataDir, { recursive: true });
@@ -74,6 +91,12 @@ db.exec(`
     redeemed_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (redeemed_by) REFERENCES users(id) ON DELETE SET NULL
+  );
+  CREATE TABLE IF NOT EXISTS bubbles_usage (
+    user_id INTEGER PRIMARY KEY,
+    plays_used INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   );
 `);
 
@@ -207,6 +230,64 @@ const redeemMembershipCode = db.transaction((userId, rawCode) => {
     .run(userId, code);
 
   return getMembership(userId);
+});
+
+function getBubblesUsage(userId) {
+  const row = db.prepare("SELECT plays_used FROM bubbles_usage WHERE user_id = ?").get(userId);
+  return row ? row.plays_used : 0;
+}
+
+function getBubblesQuota(userId) {
+  const membership = getMembership(userId);
+  if (membership.isPremium) {
+    return {
+      used: getBubblesUsage(userId),
+      remaining: null,
+      limit: BUBBLES_FREE_PLAYS,
+      isPremium: true,
+      canPlay: true,
+    };
+  }
+  const used = getBubblesUsage(userId);
+  const remaining = Math.max(0, BUBBLES_FREE_PLAYS - used);
+  return {
+    used,
+    remaining,
+    limit: BUBBLES_FREE_PLAYS,
+    isPremium: false,
+    canPlay: remaining > 0,
+  };
+}
+
+function assertBubblesAccess(userId) {
+  const quota = getBubblesQuota(userId);
+  if (!quota.canPlay) {
+    const err = new Error("Bubble Run 试用次数已用完，请开通 Premium 会员");
+    err.status = 403;
+    throw err;
+  }
+  return quota;
+}
+
+const consumeBubblesPlay = db.transaction((userId) => {
+  const membership = getMembership(userId);
+  if (membership.isPremium) {
+    return getBubblesQuota(userId);
+  }
+  const quota = getBubblesQuota(userId);
+  if (!quota.canPlay) {
+    const err = new Error("Bubble Run 试用次数已用完，请开通 Premium 会员");
+    err.status = 403;
+    throw err;
+  }
+  db.prepare(
+    `INSERT INTO bubbles_usage (user_id, plays_used, updated_at)
+     VALUES (?, 1, datetime('now'))
+     ON CONFLICT(user_id) DO UPDATE SET
+       plays_used = plays_used + 1,
+       updated_at = datetime('now')`
+  ).run(userId);
+  return getBubblesQuota(userId);
 });
 
 async function callDeepSeek(messages, temperature = 0.3) {
@@ -460,6 +541,52 @@ app.post("/api/ai/chat", authMiddleware, async (req, res) => {
   }
 });
 
+// --- Bubble Run ---
+
+app.get("/api/bubbles/quota", authMiddleware, (req, res) => {
+  res.json(getBubblesQuota(req.user.id));
+});
+
+app.post("/api/bubbles/play", authMiddleware, (req, res) => {
+  try {
+    const quota = consumeBubblesPlay(req.user.id);
+    res.json({ ok: true, ...quota });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message || "无法开始游戏" });
+  }
+});
+
+app.post("/api/bubbles/chat", authMiddleware, async (req, res) => {
+  const messages = Array.isArray(req.body.messages) ? req.body.messages : [];
+  const wordbook = Array.isArray(req.body.wordbook) ? req.body.wordbook : [];
+  if (!messages.length) return res.status(400).json({ error: "消息不能为空" });
+
+  try {
+    assertBubblesAccess(req.user.id);
+    const wordContext =
+      wordbook.length > 0
+        ? `\n\nUser wordbook: ${wordbook.map((w) => `${w.en}(${w.cn})`).join(", ")}. Help with these words when relevant.`
+        : "";
+
+    const content = await callDeepSeek(
+      [
+        { role: "system", content: SPONGEBOB_SYSTEM_PROMPT },
+        ...messages.map((m, i) => {
+          const isLastUser = m.role === "user" && i === messages.length - 1;
+          return {
+            role: m.role === "assistant" ? "assistant" : "user",
+            content: isLastUser ? String(m.content || "") + wordContext : String(m.content || ""),
+          };
+        }),
+      ],
+      0.9
+    );
+    res.json({ content });
+  } catch (err) {
+    res.status(err.status || 500).json({ error: err.message || "SpongeBob 对话失败" });
+  }
+});
+
 app.get("/api/config", optionalAuth, (_req, res) => {
   res.json({
     aiEnabled: Boolean(DEEPSEEK_API_KEY),
@@ -470,7 +597,14 @@ app.get("/api/config", optionalAuth, (_req, res) => {
       paymentQrImage: PAYMENT_QR_IMAGE,
       codeHint: PREMIUM_CODES.length ? PREMIUM_CODES[0] : "",
     },
+    bubbles: {
+      freePlays: BUBBLES_FREE_PLAYS,
+    },
   });
+});
+
+app.get("/bubbles", (_req, res) => {
+  res.sendFile(path.join(__dirname, "public", "bubbles", "index.html"));
 });
 
 app.get("*", (_req, res) => {

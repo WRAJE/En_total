@@ -13,8 +13,16 @@ const Auth = (() => {
   }
 
   function notify() {
-    listeners.forEach((fn) => fn({ user: currentUser, isGuest, membership: currentMembership }));
+    listeners.forEach((fn) => {
+      try {
+        fn({ user: currentUser, isGuest, membership: currentMembership });
+      } catch (err) {
+        console.error("Auth listener error:", err);
+      }
+    });
   }
+
+  const GUEST_SESSION_KEY = "en_total_guest_session";
 
   async function api(path, options = {}) {
     const res = await fetch(path, {
@@ -68,6 +76,7 @@ const Auth = (() => {
     isGuest = true;
     currentUser = null;
     currentMembership = { isPremium: false, plan: "free", premiumUntil: null };
+    sessionStorage.setItem(GUEST_SESSION_KEY, "1");
     hideAuthOverlay();
     updateUserBar();
     notify();
@@ -77,6 +86,7 @@ const Auth = (() => {
     currentUser = user;
     currentMembership = membership || { isPremium: false, plan: "free", premiumUntil: null };
     isGuest = false;
+    sessionStorage.removeItem(GUEST_SESSION_KEY);
     hideAuthOverlay();
     updateUserBar();
     notify();
@@ -86,6 +96,7 @@ const Auth = (() => {
     currentUser = null;
     currentMembership = { isPremium: false, plan: "free", premiumUntil: null };
     isGuest = false;
+    sessionStorage.removeItem(GUEST_SESSION_KEY);
     showAuthOverlay();
     updateUserBar();
     notify();
@@ -153,7 +164,16 @@ const Auth = (() => {
       showApp(data.user, data.membership);
       return data.user;
     } catch {
-      if (!isGuest) showAuthOverlay();
+      if (sessionStorage.getItem(GUEST_SESSION_KEY) === "1") {
+        isGuest = true;
+        currentUser = null;
+        currentMembership = { isPremium: false, plan: "free", premiumUntil: null };
+        hideAuthOverlay();
+        updateUserBar();
+        notify();
+        return null;
+      }
+      showAuthOverlay();
       return null;
     }
   }

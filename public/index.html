@@ -557,6 +557,10 @@
           <span class="nav-icon" aria-hidden="true">🤖</span>
           <span class="nav-label">AI</span>
         </button>
+        <a href="/bubbles" class="nav-btn nav-external" role="link">
+          <span class="nav-icon" aria-hidden="true">🧽</span>
+          <span class="nav-label">跑酷</span>
+        </a>
         <button type="button" class="nav-btn premium-nav" data-view="premium" role="tab">
           <span class="nav-icon" aria-hidden="true">👑</span>
           <span class="nav-label">Premium</span>
@@ -585,7 +589,7 @@
     });
     Auth.checkSession().finally(() => {
       document.body.classList.remove("app-booting");
-      Vocab.init();
+      if (typeof Vocab !== "undefined") Vocab.init();
     });
   </script>
 </body>

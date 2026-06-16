@@ -303,9 +303,9 @@ async function persistBeforeLogout() {
 }
 
 function resetNavToHome() {
-  document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+  document.querySelectorAll(".tab-bar .nav-btn[data-view]").forEach((b) => b.classList.remove("active"));
   document.querySelectorAll(".bottom-panel").forEach((p) => p.classList.add("hidden"));
-  document.querySelector('.nav-btn[data-view="home"]')?.classList.add("active");
+  document.querySelector('.tab-bar .nav-btn[data-view="home"]')?.classList.add("active");
   const main = document.getElementById("main-content");
   if (main) main.scrollTop = 0;
 }
@@ -1557,7 +1557,7 @@ function initEvents() {
     loadWord(w, true);
   });
 
-  document.querySelectorAll(".nav-btn").forEach((btn) => {
+  document.querySelectorAll(".tab-bar .nav-btn[data-view]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const view = btn.dataset.view;
 
@@ -1576,8 +1576,9 @@ function initEvents() {
         more: "panelMore",
       }[view];
       const panel = document.getElementById(panelId);
-      const isOpen = btn.classList.contains("active") && panel && !panel.classList.contains("hidden");
-      document.querySelectorAll(".nav-btn").forEach((b) => b.classList.remove("active"));
+      if (!panel) return;
+      const isOpen = btn.classList.contains("active") && !panel.classList.contains("hidden");
+      document.querySelectorAll(".tab-bar .nav-btn[data-view]").forEach((b) => b.classList.remove("active"));
       document.querySelectorAll(".bottom-panel").forEach((p) => p.classList.add("hidden"));
       if (!isOpen) {
         btn.classList.add("active");

@@ -197,6 +197,10 @@ body.app-booting #main-app {
   transform: scale(1.08);
 }
 
+a.nav-btn.nav-external {
+  text-decoration: none;
+}
+
 .nav-icon {
   font-size: 1.15rem;
   line-height: 1;

@@ -1,0 +1,9 @@
+node_modules/
+data/*.db
+.env
+.DS_Store
+
+# 已合并的原始项目（保留本地参考，不纳入版本库）
+toefl-vocab-buddy/
+Eg_ds_user-demo/
+self coding/

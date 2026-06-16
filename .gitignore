@@ -1,9 +1,34 @@
+# Dependencies
 node_modules/
-data/*.db
-.env
-.DS_Store
 
-# 已合并的原始项目（保留本地参考，不纳入版本库）
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+
+# Runtime data
+data/*.db
+data/*.db-*
+
+# OS junk
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# 已合并的原始项目（本地参考，勿提交）
 toefl-vocab-buddy/
 Eg_ds_user-demo/
 self coding/
+
+# 已合并进 public/index.html 的独立草稿
+pricing.html

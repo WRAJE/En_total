@@ -33,5 +33,5 @@ self coding/
 # 已合并进 public/index.html 的独立草稿
 pricing.html
 
-# 已合并的 Bubble Run 源项目
-bubbles/
+# 已合并的 Bubble Run 源项目（仅忽略仓库根目录）
+/bubbles/

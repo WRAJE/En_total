@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Bubble Run · IELTS 单词跑酷</title>
+  <link rel="stylesheet" href="/bubbles/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Noto+Sans+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="login-gate" class="login-gate hidden">
+    <div class="login-gate-box">
+      <p class="login-gate-title">请先登录词途</p>
+      <p class="login-gate-desc">Bubble Run 需要登录后游玩（免费 3 次，Premium 无限）</p>
+      <a href="/?login=1" class="login-gate-btn">返回词途登录</a>
+    </div>
+  </div>
+
+  <div class="app" id="bubbles-app">
+    <div id="quota-bar" class="quota-bar">
+      <span id="quota-text">加载中…</span>
+      <span id="quota-action"></span>
+    </div>
+
+    <div class="top-bar">
+      <a href="/" class="back-link">← 返回词途</a>
+      <div class="top-bar-title">🧽 Bubble Run</div>
+      <div class="top-bar-nav">
+        <button type="button" class="nav-btn" id="nav-home">🏠 Home</button>
+        <button type="button" class="nav-btn" id="nav-wordbook">📖 Wordbook <span class="badge" id="nav-count">0</span></button>
+        <button type="button" class="nav-btn" id="nav-add">➕ Add Words</button>
+        <button type="button" class="nav-btn" id="nav-chat">🧽 Chat</button>
+        <button type="button" id="audio-toggle">🔊</button>
+      </div>
+    </div>
+
+    <div id="paywall-overlay" class="paywall-overlay hidden">
+      <p>免费体验已用完</p>
+      <p class="paywall-hint">开通 Premium 会员，无限畅玩 Bubble Run</p>
+      <a href="/" class="paywall-btn">返回词途开通 Premium</a>
+    </div>
+
+    <div class="screen active" id="home">
+      <div id="home-jellyfish"></div>
+      <div class="home-title">Bubble Run</div>
+      <div class="home-subtitle">IELTS 词汇 · 海绵宝宝跑酷</div>
+      <div class="home-sponge">🧽</div>
+      <div class="home-stats">📚 Wordbook: <span id="wordbook-count">0</span> words</div>
+      <div class="mode-buttons">
+        <button type="button" class="mode-btn en2cn" id="start-en2cn">🇬🇧 English → 中文</button>
+        <button type="button" class="mode-btn cn2en" id="start-cn2en">🇨🇳 中文 → English</button>
+      </div>
+    </div>
+
+    <div class="screen" id="wordbook">
+      <div class="screen-content">
+        <div class="wordbook-header">
+          <h2>📖 My Wordbook</h2>
+          <div class="wordbook-actions">
+            <button type="button" class="action-btn" id="wordbook-start-btn">▶ Start Game</button>
+            <button type="button" class="action-btn danger" id="wordbook-clear-btn">🗑 Clear All</button>
+          </div>
+        </div>
+        <div id="wordbook-empty" class="wordbook-empty">
+          <span class="big-emoji">🪼</span>
+          No words yet! Go add some IELTS words to start learning.
+        </div>
+        <div id="wordbook-list"></div>
+      </div>
+    </div>
+
+    <div class="screen" id="wordbook-select">
+      <div class="screen-content">
+        <div class="word-select-toolbar">
+          <input type="text" id="word-search" placeholder="🔍 Search words..." autocomplete="off">
+          <select id="word-category-filter">
+            <option value="all">All Categories</option>
+          </select>
+        </div>
+        <div class="word-select-stats">Selected: <span id="selected-count">0</span> words</div>
+        <div id="word-select-list"></div>
+      </div>
+    </div>
+
+    <div class="screen" id="game-screen">
+      <canvas id="game-canvas" tabindex="0"></canvas>
+      <div class="game-overlay" id="game-start-info">
+        <div class="big">🧽</div>
+        <div class="text">Catch Jellyfish! Learn Words!</div>
+      </div>
+      <div class="game-overlay" id="question-overlay">
+        <div class="question-box">
+          <div class="question-mode" id="question-mode">English → 中文</div>
+          <div class="question-label">Choose the correct meaning:</div>
+          <div class="question-prompt" id="question-prompt">word</div>
+          <div class="question-timer-bar" id="question-timer-bar"><div class="question-timer-fill" id="question-timer-fill"></div></div>
+          <div class="question-options" id="question-options"></div>
+        </div>
+      </div>
+      <div class="game-overlay" id="gameover-overlay">
+        <div class="gameover-box">
+          <div class="gameover-title">Game Over!</div>
+          <div class="gameover-total-score" id="final-score">0</div>
+          <div class="gameover-stats">
+            <div class="gameover-stat">
+              <div class="gameover-stat-value" id="final-distance">0</div>
+              <div class="gameover-stat-label">Distance</div>
+            </div>
+            <div class="gameover-stat">
+              <div class="gameover-stat-value" id="final-learned">0/0</div>
+              <div class="gameover-stat-label">Learned</div>
+            </div>
+          </div>
+          <div class="gameover-breakdown">
+            <div class="breakdown-row"><span>Distance</span><span class="breakdown-val" id="breakdown-distance">0</span></div>
+            <div class="breakdown-row"><span>Jellyfish Catch</span><span class="breakdown-val" id="breakdown-catch">0</span></div>
+            <div class="breakdown-row"><span>Correct Answers</span><span class="breakdown-val" id="breakdown-answer">0</span></div>
+            <div class="breakdown-row"><span>Combo Bonus</span><span class="breakdown-val" id="breakdown-combo">0</span></div>
+            <div class="breakdown-row breakdown-total"><span>Total</span><span class="breakdown-val" id="final-score-dup">0</span></div>
+          </div>
+          <div class="gameover-message" id="final-message"></div>
+          <div class="gameover-buttons">
+            <button type="button" class="gameover-btn primary" id="replay-btn">🔄 Replay</button>
+            <button type="button" class="gameover-btn secondary" id="home-btn">🏠 Home</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="screen" id="chat-screen">
+      <div class="chat-header">
+        <div class="chat-header-info">
+          <span class="chat-header-icon">🧽</span>
+          <span class="chat-header-name">SpongeBob</span>
+          <span class="chat-header-status">Online! I'M READY!</span>
+        </div>
+        <button type="button" class="chat-close-btn" id="chat-close-btn">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-welcome">
+          <div class="chat-welcome-icon">🧽</div>
+          <div class="chat-welcome-text">
+            HI EVERYBODY! 🎉 I'm SpongeBob SquarePants!<br><br>
+            Tell me which words you're stuck on!<br><br>
+            I'M READY! I'M READY! I'M READY!
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area" id="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Ask SpongeBob about a word..." autocomplete="off">
+        <button type="button" id="chat-send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/auth.js"></script>
+  <script src="/js/bubbles/words.js"></script>
+  <script src="/js/bubbles/wordbook.js"></script>
+  <script src="/js/bubbles/audio.js"></script>
+  <script src="/js/bubbles/game.js"></script>
+  <script src="/js/bubbles/chat.js"></script>
+  <script src="/js/bubbles/app.js"></script>
+</body>
+</html>

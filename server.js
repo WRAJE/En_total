@@ -25,6 +25,7 @@ function loadDotEnv() {
 loadDotEnv();
 
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "en-total-dev-secret-change-in-production";
 const JWT_EXPIRES = "7d";
 const BCRYPT_ROUNDS = 10;
@@ -611,8 +612,8 @@ app.get("*", (_req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-app.listen(PORT, () => {
-  console.log(`词途 · 英语学习平台已启动: http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`词途 · 英语学习平台已启动: http://${HOST}:${PORT}`);
   if (!DEEPSEEK_API_KEY) {
     console.log("提示: 未设置 DEEPSEEK_API_KEY，AI 造句与对话功能不可用");
   }

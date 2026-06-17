@@ -16,7 +16,7 @@
 - **AI 造句**：输入 5+ 单词造句，DeepSeek 智能评分（需登录）
 - **AI 对话**：用目标单词进行真实 AI 对话练习（需登录）
 - **Premium 游戏化**：Speed Match、Spelling Sprint、Meaning Duel 三个高级游戏
-- **Bubble Run 跑酷**：IELTS 词汇海绵宝宝跑酷（独立页面 [`/bubbles`](http://localhost:3000/bubbles)），登录后免费体验 3 次，Premium 无限
+- **Bubble Run 跑酷**：IELTS 词汇海绵宝宝跑酷（独立页面 [`/bubbles`](http://localhost:5567/bubbles)），登录后免费体验 3 次，Premium 无限
 - **扫码付费 / 会员码**：扫码付款后输入会员码解锁 Premium
 - **用户系统**：注册 / 登录 / 保密问题找回密码
 - **云端同步**：登录后学习进度自动备份到 SQLite
@@ -34,15 +34,15 @@ npm start
 
 浏览器访问：
 
-- **主站**：http://localhost:3000
-- **Bubble Run 跑酷**：http://localhost:3000/bubbles（需先登录，与主站共享 Cookie）
+- **主站**：http://localhost:5567
+- **Bubble Run 跑酷**：http://localhost:5567/bubbles（需先登录，与主站共享 Cookie）
 
 ## 环境变量
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `HOST` | `0.0.0.0` | 监听地址（`0.0.0.0` 允许外网访问） |
-| `PORT` | `3000` | 服务端口 |
+| `PORT` | `5567` | 服务端口 |
 | `JWT_SECRET` | 内置开发密钥 | 生产环境务必修改 |
 | `DEEPSEEK_API_KEY` | — | DeepSeek API Key（AI 功能必需） |
 | `DEEPSEEK_MODEL` | `deepseek-chat` | 模型名称 |

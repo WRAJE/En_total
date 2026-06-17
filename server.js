@@ -24,7 +24,7 @@ function loadDotEnv() {
 
 loadDotEnv();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5567;
 const HOST = process.env.HOST || "0.0.0.0";
 const JWT_SECRET = process.env.JWT_SECRET || "en-total-dev-secret-change-in-production";
 const JWT_EXPIRES = "7d";

@@ -83,7 +83,7 @@ const Sentence = (() => {
         <p>${escapeHtml(sentence)}</p>
       </div>
     `;
-    $("#result-card").classList.remove("hidden");
+    $("#result-card").classList.remove("step-hidden");
   }
 
   function importFromVocab(words) {
@@ -106,8 +106,8 @@ const Sentence = (() => {
     targetWords = list;
     $("#words-input").value = list.join(", ");
     setStatus($("#words-status"), `已选定 ${list.length} 个单词，请在下方造句。`, "success");
-    $("#step-sentence").classList.remove("hidden");
-    $("#result-card").classList.add("hidden");
+    $("#step-sentence").classList.remove("step-hidden");
+    $("#result-card").classList.add("step-hidden");
     $("#sentence-input").value = "";
     $("#sentence-input").focus();
     renderWordTags();
@@ -154,20 +154,20 @@ const Sentence = (() => {
       }
     });
     $("#back-words-btn")?.addEventListener("click", () => {
-      $("#step-sentence").classList.add("hidden");
-      $("#result-card").classList.add("hidden");
+      $("#step-sentence").classList.add("step-hidden");
+      $("#result-card").classList.add("step-hidden");
       setStatus($("#words-status"), "", "");
     });
     $("#retry-btn")?.addEventListener("click", () => {
-      $("#result-card").classList.add("hidden");
+      $("#result-card").classList.add("step-hidden");
       $("#sentence-input").value = "";
       $("#sentence-input").focus();
       renderWordTags();
       setStatus($("#sentence-status"), "", "");
     });
     $("#new-words-btn")?.addEventListener("click", () => {
-      $("#step-sentence").classList.add("hidden");
-      $("#result-card").classList.add("hidden");
+      $("#step-sentence").classList.add("step-hidden");
+      $("#result-card").classList.add("step-hidden");
       targetWords = [];
       $("#words-input").value = "";
       $("#words-input").focus();
